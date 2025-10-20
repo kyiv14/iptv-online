@@ -1,4 +1,4 @@
-// Файл: /api/proxy.js (Обновленная версия)
+// Файл: /api/proxy.js (Фінальна версія для Vercel)
 
 const ALLOWED_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -8,29 +8,30 @@ const ALLOWED_HEADERS = {
 };
 
 module.exports = async (request, response) => {
-    // Edge Functions (request.method) или Node.js (req.method)
+    // Ця частина використовується для Node.js Serverless Functions на Vercel
     const method = request.method || (request.headers && request.headers.get('method'));
 
-    // Обработка OPTIONS-запросов для CORS preflight
+    // Обробка OPTIONS-запитів для CORS preflight
     if (method === 'OPTIONS') {
         const headers = {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
             'Access-Control-Allow-Headers': request.headers.get('Access-Control-Request-Headers') || 'Content-Type',
-            'Access-Control-Max-Age': '86400', // Кэшируем preflight на 24 часа
+            'Access-Control-Max-Age': '86400', 
             ...ALLOWED_HEADERS
         };
-        // Для Serverless Functions на Vercel
+        // Для Serverless Functions
         if (response) {
             response.writeHead(204, headers);
             response.end();
             return;
         }
-        // Для Edge Functions
+        // Для Edge Functions (як запасний варіант)
         return new Response(null, { status: 204, headers });
     }
 
-    const url = new URL(request.url);
+    // Використовуємо request.url для Edge Functions або Node.js Environment
+    const url = new URL(request.url || `http://localhost${request.url}`);
     const targetUrl = url.searchParams.get('url');
 
     if (!targetUrl) {
@@ -49,7 +50,6 @@ module.exports = async (request, response) => {
         const fetchResponse = await fetch(targetUrl, {
             method: 'GET',
             headers: {
-                // Имитация обычного браузерного запроса
                 'User-Agent': 'Mozilla/5.0 (Vercel IPTV Proxy)',
                 'Referer': new URL(targetUrl).origin
             }
@@ -59,7 +59,7 @@ module.exports = async (request, response) => {
             const errorBody = await fetchResponse.text();
             const errorResponse = { 
                 error: `Ошибка загрузки потока: ${fetchResponse.status} ${fetchResponse.statusText}`,
-                details: errorBody.substring(0, 200) // Ограничиваем детали
+                details: errorBody.substring(0, 200)
             };
             if (response) {
                 response.status(fetchResponse.status).json(errorResponse);
@@ -73,15 +73,14 @@ module.exports = async (request, response) => {
         
         const contentType = fetchResponse.headers.get('Content-Type') || 'application/vnd.apple.mpegurl';
 
-        // Передача содержимого и заголовков CORS
         const headers = { 
             ...ALLOWED_HEADERS,
             'Content-Type': contentType,
             'X-Proxied-Url': targetUrl
         };
         
-        // Для Serverless Functions
-        if (response) {
+        // Для Serverless Functions (Node.js)
+        if (response && fetchResponse.body && typeof fetchResponse.body.pipe === 'function') {
             response.writeHead(fetchResponse.status, headers);
             fetchResponse.body.pipe(response);
             return;
