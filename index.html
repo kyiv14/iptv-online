@@ -336,7 +336,6 @@
 
     // Функция для группировки каналов по категориям
     function groupChannels(channels) {
-        // Создаем копии объектов, чтобы не изменять оригинальные данные при форматировании для поиска
         return channels.map(c => ({
             ...c,
             // Добавляем нормализованные поля для удобства поиска
@@ -498,7 +497,7 @@
         
         // Очистка предыдущего состояния
         player.pause();
-        player.src = "";
+        player.removeAttribute('src'); // Удаляем атрибут src
         if (hlsInstance) { 
              hlsInstance.destroy();
              hlsInstance = null;
@@ -509,12 +508,21 @@
             hlsInstance = new Hls();
             hlsInstance.loadSource(url);
             hlsInstance.attachMedia(player);
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                // Если поток загружен успешно, пытаемся воспроизвести
+                player.play().catch(e => {
+                     console.error("Воспроизведение заблокировано:", e);
+                     // Можно добавить сообщение пользователю о необходимости нажать Play
+                });
+            });
         } else if (player.canPlayType('application/vnd.apple.mpegurl') || player.canPlayType('application/x-mpegurl')) {
             // Нативная поддержка HLS (Safari, iOS)
             player.src = url;
+            player.play().catch(e => console.error("Воспроизведение заблокировано:", e));
         } else {
             // Простая установка URL для других форматов или как запасной вариант
             player.src = url;
+            player.play().catch(e => console.error("Воспроизведение заблокировано:", e));
         }
         
         modal.style.display = 'flex';
@@ -523,7 +531,7 @@
 
     function closeModal() {
         player.pause();
-        player.src = "";
+        player.removeAttribute('src'); // Удаляем атрибут src, чтобы остановить загрузку
         if (hlsInstance) { 
              hlsInstance.destroy();
              hlsInstance = null;
