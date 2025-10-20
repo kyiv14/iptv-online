@@ -1,9 +1,0 @@
-{
-  "name": "iptv-proxy-frontend",
-  "version": "1.0.0",
-  "description": "Simple HTML IPTV player with Vercel proxy function.",
-  "scripts": {
-    "start": "echo 'No start script defined'",
-    "build": "echo 'No build step required for static HTML/API'"
-  }
-}
