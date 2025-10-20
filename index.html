@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Плейлист | Загрузка M3U</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        /* Общие стили для "Apple-стиля" */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: #f2f2f7; /* Светло-серый фон как в iOS */
+            padding: 20px;
+            margin: 0;
+            color: #1c1c1e; /* Темный текст */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Стиль заголовка */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #007aff; /* Синий акцент Apple */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Секция загрузки/перетаскивания */
+        .upload-section {
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px dashed #007aff;
+            background-color: #ffffff;
+            border-radius: 12px;
+            text-align: center;
+            transition: background-color 0.3s, border-color 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+        }
+
+        .upload-section:hover, .upload-section.dragover {
+            border-color: #34c759; /* Зеленый акцент при наведении/перетаскивании */
+            background-color: #e5e5ea;
+        }
+
+        .upload-section p {
+            margin: 5px 0;
+            font-size: 1.1rem;
+            color: #3a3a3c;
+        }
+
+        .upload-button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 15px;
+        }
+
+        .upload-button:hover {
+            background-color: #005bb5;
+        }
+
+        #file-input {
+            display: none;
+        }
+        
+        /* Секция поиска */
+        .search-container {
+            margin-bottom: 30px;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: 1px solid #d1d1d6;
+            border-radius: 10px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #search-input:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+
+        /* Стиль группы каналов */
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #d1d1d6;
+            /* Центрирование */
+            text-align: center; 
+        }
+        
+        /* Сетка для плиток */
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Скрытие пустых групп при поиске */
+        .channel-group-container:empty {
+            display: none;
+        }
+
+        /* Стиль квадратной плитки канала */
+        .channel-tile {
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            text-align: center;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            aspect-ratio: 1 / 1;
+            min-height: 150px;
+            position: relative;
+        }
+
+        .channel-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .channel-logo {
+            width: 80%;
+            height: auto;
+            max-height: 80%;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        /* Заглушка, если нет логотипа */
+        .logo-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+            height: 80%;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            color: #888;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .channel-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.2;
+            word-break: break-word;
+            flex-grow: 0;
+            overflow: hidden;
+        }
+        
+        /* Модальное окно (стили не менялись) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 15px;
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .message {
+            color: #3a3a3c;
+            font-weight: 500;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .error-message {
+            color: #ff3b30;
+        }
+        
+        .success-message {
+            color: #34c759;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Просмотр IPTV Плейлистов 📺</h1>
+    
+    <div id="uploadSection" class="upload-section">
+        <p>Загрузите или перетащите файл плейлиста (.m3u, .m3u8) сюда</p>
+        <button class="upload-button" onclick="document.getElementById('file-input').click()">Выбрать файл</button>
+        <input type="file" id="file-input" accept=".m3u,.m3u8" />
+        <p id="uploadMessage" class="message">Поддерживаются файлы M3U/M3U8.</p>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="🔍 Поиск по каналам и категориям..." disabled>
+    </div>
+
+    <div id="channel-list">
+        <p class="message" style="text-align: center; color: #6c757d;">Загрузите плейлист, чтобы увидеть список каналов.</p>
+    </div>
+</div>
+
+<div id="videoModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3 id="modal-title" style="text-align: center;"></h3>
+        <video id="channel-player" width="100%" controls style="max-height: 80vh;">
+            Ваш браузер не поддерживает видео HTML5.
+        </video>
+    </div>
+</div>
+
+<script>
+    // --- Утилитарные функции для парсинга и рендеринга ---
+
+    // Функция для парсинга M3U-плейлиста, поддерживающая оба формата
+    function parseM3U(content) {
+        const lines = content.trim().split('\n');
+        const channels = [];
+        let currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
+        let isInChannelBlock = false;
+
+        // Регулярные выражения для извлечения данных
+        const extinfRegex = /#EXTINF:.*?,(.+)/; 
+        const logoRegex = /tvg-logo="([^"]*)"/;
+        const groupTitleRegex = /group-title="([^"]*)"/;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            if (line.startsWith('#EXTINF')) {
+                // Если мы начинаем новый канал, сбрасываем предыдущий (если он не был записан)
+                if (isInChannelBlock && currentChannel.name && !currentChannel.url) {
+                    // Игнорируем предыдущий канал, если не нашли URL
+                    currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
+                }
+
+                const extinfMatch = line.match(extinfRegex);
+                const logoMatch = line.match(logoRegex);
+                const groupMatch = line.match(groupTitleRegex);
+
+                if (extinfMatch) {
+                    currentChannel.name = extinfMatch[1] ? extinfMatch[1].trim() : 'Неизвестный канал';
+                    currentChannel.logo = logoMatch ? logoMatch[1].trim() : '';
+                    // Приоритет отдаем group-title, если он есть в строке #EXTINF
+                    currentChannel.group = groupMatch ? groupMatch[1].trim() : 'Без категории';
+                    currentChannel.url = ''; 
+                    isInChannelBlock = true;
+                }
+            } else if (line.startsWith('#EXTGRP:')) {
+                // Если группа указана отдельной строкой (для нестандартного формата)
+                if (isInChannelBlock) {
+                    currentChannel.group = line.substring(8).trim();
+                }
+            }
+            else if ((line.startsWith('http') || line.startsWith('https')) && line.includes('.m3u')) {
+                // Это URL потока, завершаем канал
+                if (isInChannelBlock && currentChannel.name) { 
+                    currentChannel.url = line.trim();
+                    channels.push({ ...currentChannel }); // Клонируем объект, чтобы избежать перезаписи
+                    currentChannel = { name: '', logo: '', group: 'Без категории', url: '' }; // Сброс
+                    isInChannelBlock = false;
+                }
+            }
+        }
+        return channels.filter(c => c.url);
+    }
+
+
+    // Функция для группировки каналов по категориям
+    function groupChannels(channels) {
+        // Создаем копии объектов, чтобы не изменять оригинальные данные при форматировании для поиска
+        return channels.map(c => ({
+            ...c,
+            // Добавляем нормализованные поля для удобства поиска
+            normalizedName: c.name.toLowerCase(),
+            normalizedGroup: c.group.toLowerCase()
+        })).reduce((acc, channel) => {
+            const group = channel.group || 'Без категории';
+            if (!acc[group]) {
+                acc[group] = [];
+            }
+            acc[group].push(channel);
+            return acc;
+        }, {});
+    }
+
+    // Функция для рендеринга HTML
+    function renderChannels(groupedChannels) {
+        const listContainer = document.getElementById('channel-list');
+        listContainer.innerHTML = ''; // Очистка перед вставкой
+        
+        // Временно сохраняем в глобальной переменной для поиска
+        window.allChannelsData = groupedChannels;
+
+        if (Object.keys(groupedChannels).length === 0 || Object.values(groupedChannels).every(arr => arr.length === 0)) {
+             listContainer.innerHTML = '<p class="message error-message">Плейлист пуст или не содержит корректных каналов.</p>';
+             return;
+        }
+
+        for (const group in groupedChannels) {
+            if (groupedChannels[group].length === 0) continue;
+            
+            // Контейнер для группы (нужен для скрытия/показа при поиске)
+            const groupContainer = document.createElement('div');
+            groupContainer.classList.add('channel-group-container');
+
+            const groupTitle = document.createElement('h2');
+            groupTitle.textContent = group;
+            groupContainer.appendChild(groupTitle);
+
+            const grid = document.createElement('ul');
+            grid.classList.add('channel-grid');
+
+            groupedChannels[group].forEach(channel => {
+                const tile = document.createElement('a');
+                tile.href = '#';
+                tile.classList.add('channel-tile');
+                tile.setAttribute('data-url', channel.url);
+                tile.setAttribute('data-name', channel.name); 
+                tile.setAttribute('data-group', channel.group); // Для поиска
+
+                // Логотип или заглушка
+                if (channel.logo) {
+                    const logo = document.createElement('img');
+                    logo.classList.add('channel-logo');
+                    logo.src = channel.logo;
+                    logo.alt = channel.name;
+                    // Скрываем лого, если оно не загрузилось
+                    logo.onerror = function() {
+                         this.style.display='none';
+                         const placeholder = document.createElement('div');
+                         placeholder.classList.add('logo-placeholder');
+                         placeholder.textContent = channel.name.substring(0, 2).toUpperCase();
+                         this.parentNode.insertBefore(placeholder, this.nextSibling);
+                    }; 
+                    tile.appendChild(logo);
+                } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.classList.add('logo-placeholder');
+                    placeholder.textContent = channel.name.substring(0, 2).toUpperCase(); 
+                    tile.appendChild(placeholder);
+                }
+
+                // Название
+                const name = document.createElement('span');
+                name.classList.add('channel-name');
+                name.textContent = channel.name;
+
+                tile.appendChild(name);
+                grid.appendChild(tile);
+            });
+
+            groupContainer.appendChild(grid);
+            listContainer.appendChild(groupContainer);
+        }
+    }
+    
+    // --- Логика поиска ---
+
+    const searchInput = document.getElementById('search-input');
+
+    function filterChannels(searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const allGroupContainers = document.querySelectorAll('.channel-group-container');
+        let visibleChannelsCount = 0;
+        let visibleGroupsCount = 0;
+        
+        allGroupContainers.forEach(groupContainer => {
+            const groupTitleEl = groupContainer.querySelector('h2');
+            const groupTitle = groupTitleEl ? groupTitleEl.textContent.toLowerCase() : '';
+            const tiles = groupContainer.querySelectorAll('.channel-tile');
+            let hasVisibleTiles = false;
+
+            tiles.forEach(tile => {
+                const channelName = tile.getAttribute('data-name').toLowerCase();
+                
+                // Проверяем совпадение в названии канала ИЛИ в названии группы
+                const isMatch = channelName.includes(term) || groupTitle.includes(term);
+
+                if (isMatch) {
+                    tile.style.display = '';
+                    hasVisibleTiles = true;
+                    visibleChannelsCount++;
+                } else {
+                    tile.style.display = 'none';
+                }
+            });
+
+            // Скрываем или показываем всю группу
+            if (hasVisibleTiles) {
+                groupContainer.style.display = '';
+                groupTitleEl.style.display = '';
+                visibleGroupsCount++;
+            } else {
+                groupContainer.style.display = 'none';
+            }
+        });
+
+        // Обработка сообщения "Каналы не найдены"
+        let noResultsMessage = document.querySelector('#channel-list > .message');
+        if (noResultsMessage) {
+            noResultsMessage.remove();
+        }
+
+        if (visibleChannelsCount === 0 && term.length > 0) {
+             const messageHTML = `<p class="message error-message">По запросу "${searchTerm}" каналы не найдены.</p>`;
+             document.getElementById('channel-list').insertAdjacentHTML('beforeend', messageHTML);
+        } else if (visibleChannelsCount === 0 && document.querySelectorAll('.channel-group-container').length === 0) {
+             // Показываем дефолтное сообщение, если плейлист не загружен
+             const messageHTML = '<p class="message" style="text-align: center; color: #6c757d;">Загрузите плейлист, чтобы увидеть список каналов.</p>';
+             document.getElementById('channel-list').insertAdjacentHTML('beforeend', messageHTML);
+        }
+    }
+
+    // Привязываем функцию поиска к полю ввода
+    searchInput.addEventListener('input', (event) => {
+        filterChannels(event.target.value);
+    });
+
+    // --- Воспроизведение видео (Модальное окно) ---
+    
+    const modal = document.getElementById('videoModal');
+    const closeBtn = document.querySelector('.close-button');
+    const player = document.getElementById('channel-player');
+    const modalTitle = document.getElementById('modal-title');
+    const listContainer = document.getElementById('channel-list');
+    let hlsInstance = null;
+
+    // Функция для открытия модального окна и настройки плеера
+    function openModal(name, url) {
+        modalTitle.textContent = name;
+        
+        // Очистка предыдущего состояния
+        player.pause();
+        player.src = "";
+        if (hlsInstance) { 
+             hlsInstance.destroy();
+             hlsInstance = null;
+        }
+        
+        // Попытка использования HLS.js
+        if (window.Hls && Hls.isSupported()) {
+            hlsInstance = new Hls();
+            hlsInstance.loadSource(url);
+            hlsInstance.attachMedia(player);
+        } else if (player.canPlayType('application/vnd.apple.mpegurl') || player.canPlayType('application/x-mpegurl')) {
+            // Нативная поддержка HLS (Safari, iOS)
+            player.src = url;
+        } else {
+            // Простая установка URL для других форматов или как запасной вариант
+            player.src = url;
+        }
+        
+        modal.style.display = 'flex';
+        player.load();
+    }
+
+    function closeModal() {
+        player.pause();
+        player.src = "";
+        if (hlsInstance) { 
+             hlsInstance.destroy();
+             hlsInstance = null;
+        }
+        modal.style.display = 'none';
+    }
+
+    // Обработчики для модального окна
+    closeBtn.onclick = closeModal;
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    // Обработчик клика по плитке
+    listContainer.addEventListener('click', function(event) {
+        const tile = event.target.closest('.channel-tile');
+        if (tile) {
+            event.preventDefault();
+            // Название берем из атрибута, чтобы избежать проблем с заглушкой
+            openModal(tile.getAttribute('data-name'), tile.getAttribute('data-url'));
+        }
+    });
+
+    // --- Логика загрузки и перетаскивания файла ---
+    
+    const fileInput = document.getElementById('file-input');
+    const uploadSection = document.getElementById('uploadSection');
+    const uploadMessage = document.getElementById('uploadMessage');
+    const searchInputEl = document.getElementById('search-input');
+
+
+    // Главный обработчик файла
+    function handleFile(file) {
+        if (!file) return;
+
+        // Сброс сообщений и состояния
+        uploadMessage.textContent = 'Обработка...';
+        uploadMessage.classList.remove('error-message', 'success-message');
+        uploadMessage.classList.add('message');
+        searchInputEl.value = ''; // Очистка поиска
+        searchInputEl.disabled = true; // Блокировка поиска во время загрузки
+
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const content = e.target.result;
+            
+            if (!content.trim().startsWith('#EXTM3U')) {
+                uploadMessage.textContent = 'Ошибка: Файл не является корректным M3U плейлистом (отсутствует #EXTM3U).';
+                uploadMessage.classList.add('error-message');
+                listContainer.innerHTML = '';
+                return;
+            }
+
+            const allChannels = parseM3U(content);
+            const grouped = groupChannels(allChannels);
+            
+            renderChannels(grouped);
+            
+            if (allChannels.length > 0) {
+                 uploadMessage.textContent = `Успешно загружено ${allChannels.length} каналов.`;
+                 uploadMessage.classList.add('success-message');
+                 searchInputEl.disabled = false; // Разблокировка поиска
+                 filterChannels(searchInputEl.value); // Применяем фильтр на случай, если что-то введено
+            } else {
+                 uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов с адресами.';
+                 uploadMessage.classList.add('error-message');
+                 searchInputEl.disabled = true;
+            }
+        };
+
+        reader.onerror = function() {
+            uploadMessage.textContent = 'Ошибка чтения файла.';
+            uploadMessage.classList.add('error-message');
+            listContainer.innerHTML = '';
+            searchInputEl.disabled = true;
+        };
+
+        reader.readAsText(file);
+    }
+
+    // Обработка через кнопку/выбор файла
+    fileInput.addEventListener('change', function(event) {
+        if (event.target.files.length > 0) {
+            handleFile(event.target.files[0]);
+            event.target.value = ''; 
+        }
+    });
+
+    // Обработка Drag and Drop: Предотвращение стандартного поведения браузера
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadSection.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+    });
+
+    // Визуальный эффект при перетаскивании
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadSection.addEventListener(eventName, () => {
+            uploadSection.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadSection.addEventListener(eventName, () => {
+            uploadSection.classList.remove('dragover');
+        }, false);
+    });
+
+    // Обработка сброса файла
+    uploadSection.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    }, false);
+    
+</script>
+
+</body>
+</html>
