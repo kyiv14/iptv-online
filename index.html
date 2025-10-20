@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPTV Плейлист | Загрузка M3U</title>
+    <title>IPTV Плейлист | Просмотр M3U</title>
     <link rel="icon" href="https://raw.githubusercontent.com/kyiv14/iptv-online/refs/heads/main/icon.ico">
     
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         /* Общие стили для "Apple-стиля" */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            background-color: #f2f2f7; /* Светло-серый фон как в iOS */
+            background-color: #f2f2f7;
             padding: 20px;
             margin: 0;
-            color: #1c1c1e; /* Темный текст */
+            color: #1c1c1e;
         }
 
         .container {
@@ -26,7 +25,7 @@
         h1 {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #007aff; /* Синий акцент Apple */
+            color: #007aff;
             margin-bottom: 20px;
             text-align: center;
         }
@@ -45,7 +44,7 @@
         }
 
         .upload-section:hover, .upload-section.dragover {
-            border-color: #34c759; /* Зеленый акцент при наведении/перетаскивании */
+            border-color: #34c759;
             background-color: #e5e5ea;
         }
 
@@ -101,6 +100,42 @@
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
         }
 
+        /* Стиль кнопок категорий (ПЛАШКИ) */
+        #category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-top: 1px solid #d1d1d6;
+            border-bottom: 1px solid #d1d1d6;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .category-button {
+            display: inline-block;
+            background-color: #ff3b30; /* Красный цвет */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px; /* Округлые плашки */
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+            flex-shrink: 0;
+            user-select: none;
+        }
+        
+        .category-button:hover {
+            background-color: #c03126; /* Темнее при наведении */
+        }
+
+        .category-button.active {
+            background-color: #007aff; /* Синий акцент для активной категории */
+        }
+        
         /* Стиль группы каналов */
         h2 {
             font-size: 1.8rem;
@@ -110,7 +145,6 @@
             margin-bottom: 20px;
             padding-bottom: 5px;
             border-bottom: 1px solid #d1d1d6;
-            /* Центрирование */
             text-align: center; 
         }
         
@@ -138,7 +172,7 @@
             padding: 15px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
+            cursor: default;
             text-decoration: none;
             color: inherit;
             display: flex;
@@ -149,11 +183,12 @@
             min-height: 150px;
             position: relative;
         }
-
+        
         .channel-tile:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            transform: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
 
         .channel-logo {
             width: 80%;
@@ -187,49 +222,6 @@
             overflow: hidden;
         }
         
-        /* Модальное окно (стили не менялись) */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            padding: 20px;
-            border-radius: 15px;
-            position: relative;
-            max-width: 90%;
-            max-height: 90%;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            cursor: pointer;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
         .message {
             color: #3a3a3c;
             font-weight: 500;
@@ -249,7 +241,7 @@
 <body>
 
 <div class="container">
-    <h1>Просмотр IPTV Плейлистов 📺</h1>
+    <h1>IPTV Плейлист 📺</h1>
     
     <div id="uploadSection" class="upload-section">
         <p>Загрузите или перетащите файл плейлиста (.m3u, .m3u8) сюда</p>
@@ -261,36 +253,26 @@
     <div class="search-container">
         <input type="text" id="search-input" placeholder="🔍 Поиск по каналам и категориям..." disabled>
     </div>
+    
+    <div id="category-filter">
+        </div>
 
     <div id="channel-list">
         <p class="message" style="text-align: center; color: #6c757d;">Загрузите плейлист, чтобы увидеть список каналов.</p>
     </div>
 </div>
 
-<div id="videoModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h3 id="modal-title" style="text-align: center;"></h3>
-        <video id="channel-player" width="100%" controls style="max-height: 80vh;">
-            Ваш браузер не поддерживает видео HTML5.
-        </video>
-    </div>
-</div>
-
 <script>
-    // БАЗОВЫЙ URL ВАШЕГО ПРОКСИ НА VERCEL: '/api/proxy'
     const PROXY_BASE_URL = window.location.origin + '/api/proxy?url=';
     
     // --- Утилитарные функции для парсинга и рендеринга ---
 
-    // Функция для парсинга M3U-плейлиста, поддерживающая оба формата
     function parseM3U(content) {
         const lines = content.trim().split('\n');
         const channels = [];
         let currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
         let isInChannelBlock = false;
 
-        // Регулярные выражения для извлечения данных
         const extinfRegex = /#EXTINF:.*?,(.+)/; 
         const logoRegex = /tvg-logo="([^"]*)"/;
         const groupTitleRegex = /group-title="([^"]*)"/;
@@ -299,7 +281,6 @@
             const line = lines[i].trim();
 
             if (line.startsWith('#EXTINF')) {
-                // Если мы начинаем новый канал, сбрасываем предыдущий (если он не был записан)
                 if (isInChannelBlock && currentChannel.name && !currentChannel.url) {
                     currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
                 }
@@ -311,36 +292,31 @@
                 if (extinfMatch) {
                     currentChannel.name = extinfMatch[1] ? extinfMatch[1].trim() : 'Неизвестный канал';
                     currentChannel.logo = logoMatch ? logoMatch[1].trim() : '';
-                    // Приоритет отдаем group-title, если он есть в строке #EXTINF
                     currentChannel.group = groupMatch ? groupMatch[1].trim() : 'Без категории';
                     currentChannel.url = ''; 
                     isInChannelBlock = true;
                 }
             } else if (line.startsWith('#EXTGRP:')) {
-                // Если группа указана отдельной строкой (для нестандартного формата)
                 if (isInChannelBlock) {
                     currentChannel.group = line.substring(8).trim();
                 }
             }
             else if ((line.startsWith('http') || line.startsWith('https')) && line.includes('.m3u')) {
-                // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Оборачиваем оригинальный URL в прокси-ссылку
                 if (isInChannelBlock && currentChannel.name) { 
                     const originalUrl = line.trim();
-                    currentChannel.url = PROXY_BASE_URL + encodeURIComponent(originalUrl);
+                    currentChannel.url = originalUrl; // URL потока не нужен, но оставляем для структуры
                     channels.push({ ...currentChannel }); 
                     currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
                     isInChannelBlock = false;
                 }
             }
         }
-        return channels.filter(c => c.url);
+        return channels.filter(c => c.name);
     }
 
-    // --- Функция для группировки каналов по категориям ---
     function groupChannels(channels) {
         return channels.map(c => ({
             ...c,
-            // Добавляем нормализованные поля для удобства поиска
             normalizedName: c.name.toLowerCase(),
             normalizedGroup: c.group.toLowerCase()
         })).reduce((acc, channel) => {
@@ -353,10 +329,9 @@
         }, {});
     }
 
-    // --- Функция для рендеринга HTML ---
     function renderChannels(groupedChannels) {
         const listContainer = document.getElementById('channel-list');
-        listContainer.innerHTML = ''; // Очистка перед вставкой
+        listContainer.innerHTML = ''; 
         
         window.allChannelsData = groupedChannels;
 
@@ -364,12 +339,17 @@
              listContainer.innerHTML = '<p class="message error-message">Плейлист пуст или не содержит корректных каналов.</p>';
              return;
         }
+        
+        // 1. Создание кнопок категорий
+        createCategoryButtons(Object.keys(groupedChannels));
 
+        // 2. Рендеринг плиток
         for (const group in groupedChannels) {
             if (groupedChannels[group].length === 0) continue;
             
             const groupContainer = document.createElement('div');
             groupContainer.classList.add('channel-group-container');
+            groupContainer.setAttribute('data-category', group); // Идентификатор для фильтрации
 
             const groupTitle = document.createElement('h2');
             groupTitle.textContent = group;
@@ -379,10 +359,8 @@
             grid.classList.add('channel-grid');
 
             groupedChannels[group].forEach(channel => {
-                const tile = document.createElement('a');
-                tile.href = '#';
+                const tile = document.createElement('div'); // Используем div
                 tile.classList.add('channel-tile');
-                tile.setAttribute('data-url', channel.url);
                 tile.setAttribute('data-name', channel.name); 
                 tile.setAttribute('data-group', channel.group); 
 
@@ -417,8 +395,73 @@
             groupContainer.appendChild(grid);
             listContainer.appendChild(groupContainer);
         }
+        
+        // Сброс фильтра поиска после рендеринга
+        filterChannels(searchInput.value);
     }
     
+    // --- НОВАЯ ФУНКЦИЯ: Создание кнопок категорий ---
+    function createCategoryButtons(categories) {
+        const filterContainer = document.getElementById('category-filter');
+        filterContainer.innerHTML = ''; // Очищаем контейнер
+
+        // Кнопка "Все" (All)
+        const allButton = document.createElement('button');
+        allButton.textContent = 'Все (All)';
+        allButton.classList.add('category-button', 'active');
+        allButton.setAttribute('data-filter', 'all');
+        filterContainer.appendChild(allButton);
+        
+        // Кнопки для каждой категории
+        categories.forEach(category => {
+            const button = document.createElement('button');
+            button.textContent = category;
+            button.classList.add('category-button');
+            button.setAttribute('data-filter', category);
+            filterContainer.appendChild(button);
+        });
+
+        // Добавляем обработчик кликов для контейнера
+        filterContainer.addEventListener('click', handleCategoryFilterClick);
+    }
+    
+    // --- НОВАЯ ФУНКЦИЯ: Обработка клика по кнопке категории ---
+    function handleCategoryFilterClick(event) {
+        const target = event.target;
+        if (!target.classList.contains('category-button')) return;
+
+        const selectedCategory = target.getAttribute('data-filter');
+        const containers = document.querySelectorAll('.channel-group-container');
+        const buttons = document.querySelectorAll('.category-button');
+
+        // Сброс активного состояния кнопок
+        buttons.forEach(btn => btn.classList.remove('active'));
+        target.classList.add('active');
+        
+        searchInput.value = ''; // Очищаем поле поиска при активации категории
+
+        containers.forEach(container => {
+            const category = container.getAttribute('data-category');
+            
+            if (selectedCategory === 'all' || category === selectedCategory) {
+                // Показываем контейнер категории
+                container.style.display = '';
+                // Показываем все плитки внутри (т.к. поиск сброшен)
+                container.querySelectorAll('.channel-tile').forEach(tile => {
+                     tile.style.display = '';
+                });
+            } else {
+                // Скрываем контейнер
+                container.style.display = 'none';
+            }
+        });
+        
+        // Убираем сообщение "Каналы не найдены", если оно было
+        const noResultsMessage = document.querySelector('#channel-list > .message');
+        if (noResultsMessage) noResultsMessage.remove();
+    }
+
+
     // --- Логика поиска ---
 
     const searchInput = document.getElementById('search-input');
@@ -426,8 +469,14 @@
     function filterChannels(searchTerm) {
         const term = searchTerm.toLowerCase();
         const allGroupContainers = document.querySelectorAll('.channel-group-container');
+        const filterContainer = document.getElementById('category-filter');
         let visibleChannelsCount = 0;
         
+        // Сброс активной кнопки фильтрации при начале ввода
+        if (term.length > 0) {
+            filterContainer.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
+        }
+
         allGroupContainers.forEach(groupContainer => {
             const groupTitleEl = groupContainer.querySelector('h2');
             const groupTitle = groupTitleEl ? groupTitleEl.textContent.toLowerCase() : '';
@@ -475,87 +524,6 @@
         filterChannels(event.target.value);
     });
 
-    // --- Воспроизведение видео (Модальное окно) ---
-    
-    const modal = document.getElementById('videoModal');
-    const closeBtn = document.querySelector('.close-button');
-    const player = document.getElementById('channel-player');
-    const modalTitle = document.getElementById('modal-title');
-    const listContainer = document.getElementById('channel-list');
-    let hlsInstance = null;
-
-    // *** КЛЮЧЕВАЯ ИЗМЕНЕННАЯ ФУНКЦИЯ openModal ***
-    function openModal(name, url) {
-        modalTitle.textContent = name;
-        
-        // Очистка предыдущего состояния
-        player.pause();
-        player.removeAttribute('src'); 
-        if (hlsInstance) { 
-             hlsInstance.destroy();
-             hlsInstance = null;
-        }
-        
-        // HLS.js теперь будет работать с URL прокси
-        if (window.Hls && Hls.isSupported()) {
-            hlsInstance = new Hls();
-            hlsInstance.loadSource(url);
-            hlsInstance.attachMedia(player);
-            hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-                player.play().catch(e => {
-                     console.error("Воспроизведение заблокировано:", e);
-                });
-            });
-            // Добавим обработчик ошибки HLS, чтобы понять, что происходит
-            hlsInstance.on(Hls.Events.ERROR, function (event, data) {
-                if (data.fatal) {
-                    console.error("КРИТИЧЕСКАЯ ОШИБКА HLS.JS:", data.type, data.details);
-                    // Вместо alert, который может быть навязчивым, используем консоль
-                    modalTitle.textContent = `Ошибка воспроизведения: ${name} (Детали в консоли)`;
-                }
-            });
-
-        } else if (player.canPlayType('application/vnd.apple.mpegurl') || player.canPlayType('application/x-mpegurl')) {
-            // Нативная поддержка HLS (Safari)
-            player.src = url;
-            player.play().catch(e => console.error("Воспроизведение заблокировано:", e));
-        } else {
-            // Запасной вариант
-            player.src = url;
-            player.play().catch(e => console.error("Воспроизведение заблокировано:", e));
-        }
-        
-        modal.style.display = 'flex';
-        player.load();
-    }
-
-    function closeModal() {
-        player.pause();
-        player.removeAttribute('src'); 
-        if (hlsInstance) { 
-             hlsInstance.destroy();
-             hlsInstance = null;
-        }
-        modal.style.display = 'none';
-    }
-
-    // Обработчики для модального окна
-    closeBtn.onclick = closeModal;
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            closeModal();
-        }
-    }
-
-    // Обработчик клика по плитке
-    listContainer.addEventListener('click', function(event) {
-        const tile = event.target.closest('.channel-tile');
-        if (tile) {
-            event.preventDefault();
-            openModal(tile.getAttribute('data-name'), tile.getAttribute('data-url'));
-        }
-    });
-
     // --- Логика загрузки и перетаскивания файла ---
     
     const fileInput = document.getElementById('file-input');
@@ -568,7 +536,6 @@
     function handleFile(file) {
         if (!file) return;
 
-        // Сброс сообщений и состояния
         uploadMessage.textContent = 'Обработка...';
         uploadMessage.classList.remove('error-message', 'success-message');
         uploadMessage.classList.add('message');
@@ -583,7 +550,8 @@
             if (!content.trim().startsWith('#EXTM3U')) {
                 uploadMessage.textContent = 'Ошибка: Файл не является корректным M3U плейлистом (отсутствует #EXTM3U).';
                 uploadMessage.classList.add('error-message');
-                listContainer.innerHTML = '';
+                document.getElementById('channel-list').innerHTML = '';
+                document.getElementById('category-filter').innerHTML = ''; // Очистка
                 return;
             }
 
@@ -598,16 +566,18 @@
                  searchInputEl.disabled = false; 
                  filterChannels(searchInputEl.value); 
             } else {
-                 uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов с адресами.';
+                 uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов с именами.';
                  uploadMessage.classList.add('error-message');
                  searchInputEl.disabled = true;
+                 document.getElementById('category-filter').innerHTML = ''; // Очистка
             }
         };
 
         reader.onerror = function() {
             uploadMessage.textContent = 'Ошибка чтения файла.';
             uploadMessage.classList.add('error-message');
-            listContainer.innerHTML = '';
+            document.getElementById('channel-list').innerHTML = '';
+            document.getElementById('category-filter').innerHTML = ''; // Очистка
             searchInputEl.disabled = true;
         };
 
