@@ -278,6 +278,9 @@
 </div>
 
 <script>
+    // БАЗОВЫЙ URL ВАШЕГО ПРОКСИ НА VERCEL: '/api/proxy'
+    const PROXY_BASE_URL = window.location.origin + '/api/proxy?url=';
+    
     // --- Утилитарные функции для парсинга и рендеринга ---
 
     // Функция для парсинга M3U-плейлиста, поддерживающая оба формата
@@ -298,7 +301,6 @@
             if (line.startsWith('#EXTINF')) {
                 // Если мы начинаем новый канал, сбрасываем предыдущий (если он не был записан)
                 if (isInChannelBlock && currentChannel.name && !currentChannel.url) {
-                    // Игнорируем предыдущий канал, если не нашли URL
                     currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
                 }
 
@@ -321,11 +323,12 @@
                 }
             }
             else if ((line.startsWith('http') || line.startsWith('https')) && line.includes('.m3u')) {
-                // Это URL потока, завершаем канал
+                // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Оборачиваем оригинальный URL в прокси-ссылку
                 if (isInChannelBlock && currentChannel.name) { 
-                    currentChannel.url = line.trim();
-                    channels.push({ ...currentChannel }); // Клонируем объект, чтобы избежать перезаписи
-                    currentChannel = { name: '', logo: '', group: 'Без категории', url: '' }; // Сброс
+                    const originalUrl = line.trim();
+                    currentChannel.url = PROXY_BASE_URL + encodeURIComponent(originalUrl);
+                    channels.push({ ...currentChannel }); 
+                    currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
                     isInChannelBlock = false;
                 }
             }
@@ -333,8 +336,7 @@
         return channels.filter(c => c.url);
     }
 
-
-    // Функция для группировки каналов по категориям
+    // --- Функция для группировки каналов по категориям ---
     function groupChannels(channels) {
         return channels.map(c => ({
             ...c,
@@ -351,12 +353,11 @@
         }, {});
     }
 
-    // Функция для рендеринга HTML
+    // --- Функция для рендеринга HTML ---
     function renderChannels(groupedChannels) {
         const listContainer = document.getElementById('channel-list');
         listContainer.innerHTML = ''; // Очистка перед вставкой
         
-        // Временно сохраняем в глобальной переменной для поиска
         window.allChannelsData = groupedChannels;
 
         if (Object.keys(groupedChannels).length === 0 || Object.values(groupedChannels).every(arr => arr.length === 0)) {
@@ -367,7 +368,6 @@
         for (const group in groupedChannels) {
             if (groupedChannels[group].length === 0) continue;
             
-            // Контейнер для группы (нужен для скрытия/показа при поиске)
             const groupContainer = document.createElement('div');
             groupContainer.classList.add('channel-group-container');
 
@@ -384,15 +384,13 @@
                 tile.classList.add('channel-tile');
                 tile.setAttribute('data-url', channel.url);
                 tile.setAttribute('data-name', channel.name); 
-                tile.setAttribute('data-group', channel.group); // Для поиска
+                tile.setAttribute('data-group', channel.group); 
 
-                // Логотип или заглушка
                 if (channel.logo) {
                     const logo = document.createElement('img');
                     logo.classList.add('channel-logo');
                     logo.src = channel.logo;
                     logo.alt = channel.name;
-                    // Скрываем лого, если оно не загрузилось
                     logo.onerror = function() {
                          this.style.display='none';
                          const placeholder = document.createElement('div');
@@ -408,7 +406,6 @@
                     tile.appendChild(placeholder);
                 }
 
-                // Название
                 const name = document.createElement('span');
                 name.classList.add('channel-name');
                 name.textContent = channel.name;
@@ -435,12 +432,11 @@
             const groupTitleEl = groupContainer.querySelector('h2');
             const groupTitle = groupTitleEl ? groupTitleEl.textContent.toLowerCase() : '';
             const tiles = groupContainer.querySelectorAll('.channel-tile');
+            
             let hasVisibleTiles = false;
 
             tiles.forEach(tile => {
                 const channelName = tile.getAttribute('data-name').toLowerCase();
-                
-                // Проверяем совпадение в названии канала ИЛИ в названии группы
                 const isMatch = channelName.includes(term) || groupTitle.includes(term);
 
                 if (isMatch) {
@@ -452,7 +448,6 @@
                 }
             });
 
-            // Скрываем или показываем всю группу
             if (hasVisibleTiles) {
                 groupContainer.style.display = '';
                 groupTitleEl.style.display = '';
@@ -461,7 +456,6 @@
             }
         });
 
-        // Обработка сообщения "Каналы не найдены"
         let noResultsMessage = document.querySelector('#channel-list > .message');
         if (noResultsMessage) {
             noResultsMessage.remove();
@@ -471,7 +465,6 @@
              const messageHTML = `<p class="message error-message">По запросу "${searchTerm}" каналы не найдены.</p>`;
              document.getElementById('channel-list').insertAdjacentHTML('beforeend', messageHTML);
         } else if (visibleChannelsCount === 0 && document.querySelectorAll('.channel-group-container').length === 0) {
-             // Показываем дефолтное сообщение, если плейлист не загружен
              const messageHTML = '<p class="message" style="text-align: center; color: #6c757d;">Загрузите плейлист, чтобы увидеть список каналов.</p>';
              document.getElementById('channel-list').insertAdjacentHTML('beforeend', messageHTML);
         }
@@ -491,36 +484,43 @@
     const listContainer = document.getElementById('channel-list');
     let hlsInstance = null;
 
-    // Функция для открытия модального окна и настройки плеера
+    // *** КЛЮЧЕВАЯ ИЗМЕНЕННАЯ ФУНКЦИЯ openModal ***
     function openModal(name, url) {
         modalTitle.textContent = name;
         
         // Очистка предыдущего состояния
         player.pause();
-        player.removeAttribute('src'); // Удаляем атрибут src
+        player.removeAttribute('src'); 
         if (hlsInstance) { 
              hlsInstance.destroy();
              hlsInstance = null;
         }
         
-        // Попытка использования HLS.js
+        // HLS.js теперь будет работать с URL прокси
         if (window.Hls && Hls.isSupported()) {
             hlsInstance = new Hls();
             hlsInstance.loadSource(url);
             hlsInstance.attachMedia(player);
             hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-                // Если поток загружен успешно, пытаемся воспроизвести
                 player.play().catch(e => {
                      console.error("Воспроизведение заблокировано:", e);
-                     // Можно добавить сообщение пользователю о необходимости нажать Play
                 });
             });
+            // Добавим обработчик ошибки HLS, чтобы понять, что происходит
+            hlsInstance.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    console.error("КРИТИЧЕСКАЯ ОШИБКА HLS.JS:", data.type, data.details);
+                    // Вместо alert, который может быть навязчивым, используем консоль
+                    modalTitle.textContent = `Ошибка воспроизведения: ${name} (Детали в консоли)`;
+                }
+            });
+
         } else if (player.canPlayType('application/vnd.apple.mpegurl') || player.canPlayType('application/x-mpegurl')) {
-            // Нативная поддержка HLS (Safari, iOS)
+            // Нативная поддержка HLS (Safari)
             player.src = url;
             player.play().catch(e => console.error("Воспроизведение заблокировано:", e));
         } else {
-            // Простая установка URL для других форматов или как запасной вариант
+            // Запасной вариант
             player.src = url;
             player.play().catch(e => console.error("Воспроизведение заблокировано:", e));
         }
@@ -531,7 +531,7 @@
 
     function closeModal() {
         player.pause();
-        player.removeAttribute('src'); // Удаляем атрибут src, чтобы остановить загрузку
+        player.removeAttribute('src'); 
         if (hlsInstance) { 
              hlsInstance.destroy();
              hlsInstance = null;
@@ -552,7 +552,6 @@
         const tile = event.target.closest('.channel-tile');
         if (tile) {
             event.preventDefault();
-            // Название берем из атрибута, чтобы избежать проблем с заглушкой
             openModal(tile.getAttribute('data-name'), tile.getAttribute('data-url'));
         }
     });
@@ -573,8 +572,8 @@
         uploadMessage.textContent = 'Обработка...';
         uploadMessage.classList.remove('error-message', 'success-message');
         uploadMessage.classList.add('message');
-        searchInputEl.value = ''; // Очистка поиска
-        searchInputEl.disabled = true; // Блокировка поиска во время загрузки
+        searchInputEl.value = ''; 
+        searchInputEl.disabled = true; 
 
         const reader = new FileReader();
         
@@ -596,8 +595,8 @@
             if (allChannels.length > 0) {
                  uploadMessage.textContent = `Успешно загружено ${allChannels.length} каналов.`;
                  uploadMessage.classList.add('success-message');
-                 searchInputEl.disabled = false; // Разблокировка поиска
-                 filterChannels(searchInputEl.value); // Применяем фильтр на случай, если что-то введено
+                 searchInputEl.disabled = false; 
+                 filterChannels(searchInputEl.value); 
             } else {
                  uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов с адресами.';
                  uploadMessage.classList.add('error-message');
@@ -654,6 +653,5 @@
     }, false);
     
 </script>
-
 </body>
 </html>
