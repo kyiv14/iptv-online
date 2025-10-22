@@ -46,58 +46,8 @@
         .upload-section:hover, .upload-section.dragover {
             border-color: #34c759;
             background-color: #e5e5ea;
-            cursor: default; /* Сброс курсора на hover, т.к. секция теперь содержит другие элементы */
-        }
-        
-        /* Стили для формы URL */
-        .url-input-container {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #d1d1d6;
-        }
-        
-        #url-input {
-            width: calc(100% - 100px); /* Чтобы кнопка влезла справа */
-            padding: 10px 15px;
-            font-size: 1rem;
-            border: 1px solid #d1d1d6;
-            border-radius: 8px 0 0 8px; /* Скругление слева */
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            vertical-align: middle;
-            margin-bottom: 10px;
-            max-width: 400px; /* Ограничение ширины для десктопа */
-        }
-        
-        #url-input:focus {
-            border-color: #007aff;
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
         }
 
-        .url-load-button {
-            background-color: #34c759; /* Зеленый цвет для загрузки по URL */
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 0 8px 8px 0; /* Скругление справа */
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            vertical-align: middle;
-            margin-left: -4px; /* Убрать зазор между полем и кнопкой */
-        }
-        
-        .url-load-button:hover {
-            background-color: #2b9d47;
-        }
-        
-        /* Измененные стили для кнопки выбора файла */
         .upload-section p {
             margin: 5px 0;
             font-size: 1.1rem;
@@ -286,28 +236,6 @@
         .success-message {
             color: #34c759;
         }
-        
-        /* Адаптация для мобильных устройств */
-        @media (max-width: 600px) {
-            #url-input {
-                width: 100%;
-                border-radius: 8px;
-                margin-left: 0;
-                margin-bottom: 10px;
-                max-width: none;
-                text-align: center;
-            }
-            
-            .url-load-button {
-                width: 100%;
-                border-radius: 8px;
-                margin-left: 0;
-            }
-            
-            .upload-section {
-                padding: 20px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -319,15 +247,6 @@
         <p>Загрузите или перетащите файл плейлиста (.m3u, .m3u8) сюда</p>
         <button class="upload-button" onclick="document.getElementById('file-input').click()">Выбрать файл</button>
         <input type="file" id="file-input" accept=".m3u,.m3u8" />
-        
-        <div class="url-input-container">
-            <p>Или вставьте ссылку на плейлист</p>
-            <div>
-                 <input type="text" id="url-input" placeholder="http://example.com/playlist.m3u">
-                 <button class="url-load-button" onclick="handleUrlLoad()">Загрузить URL</button>
-            </div>
-        </div>
-
         <p id="uploadMessage" class="message">Поддерживаются файлы M3U/M3U8.</p>
     </div>
 
@@ -608,42 +527,10 @@
     // --- Логика загрузки и перетаскивания файла ---
     
     const fileInput = document.getElementById('file-input');
-    const urlInput = document.getElementById('url-input'); // Добавлено
     const uploadSection = document.getElementById('uploadSection');
     const uploadMessage = document.getElementById('uploadMessage');
     const searchInputEl = document.getElementById('search-input');
 
-
-    // Централизованная функция обработки контента
-    function processPlaylistContent(content) {
-        if (!content.trim().startsWith('#EXTM3U')) {
-            uploadMessage.textContent = 'Ошибка: Файл не является корректным M3U плейлистом (отсутствует #EXTM3U).';
-            uploadMessage.classList.add('error-message');
-            document.getElementById('channel-list').innerHTML = '';
-            document.getElementById('category-filter').innerHTML = '';
-            searchInputEl.disabled = true;
-            return;
-        }
-
-        const allChannels = parseM3U(content);
-        const grouped = groupChannels(allChannels);
-        
-        renderChannels(grouped);
-        
-        if (allChannels.length > 0) {
-             uploadMessage.textContent = `Успешно загружено ${allChannels.length} каналов.`;
-             uploadMessage.classList.remove('error-message');
-             uploadMessage.classList.add('success-message');
-             searchInputEl.disabled = false; 
-             filterChannels(searchInputEl.value); 
-        } else {
-             uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов с именами.';
-             uploadMessage.classList.remove('success-message');
-             uploadMessage.classList.add('error-message');
-             searchInputEl.disabled = true;
-             document.getElementById('category-filter').innerHTML = '';
-        }
-    }
 
     // Главный обработчик файла
     function handleFile(file) {
@@ -658,63 +545,43 @@
         const reader = new FileReader();
         
         reader.onload = function(e) {
-            processPlaylistContent(e.target.result);
+            const content = e.target.result;
+            
+            if (!content.trim().startsWith('#EXTM3U')) {
+                uploadMessage.textContent = 'Ошибка: Файл не является корректным M3U плейлистом (отсутствует #EXTM3U).';
+                uploadMessage.classList.add('error-message');
+                document.getElementById('channel-list').innerHTML = '';
+                document.getElementById('category-filter').innerHTML = ''; // Очистка
+                return;
+            }
+
+            const allChannels = parseM3U(content);
+            const grouped = groupChannels(allChannels);
+            
+            renderChannels(grouped);
+            
+            if (allChannels.length > 0) {
+                 uploadMessage.textContent = `Успешно загружено ${allChannels.length} каналов.`;
+                 uploadMessage.classList.add('success-message');
+                 searchInputEl.disabled = false; 
+                 filterChannels(searchInputEl.value); 
+            } else {
+                 uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов с именами.';
+                 uploadMessage.classList.add('error-message');
+                 searchInputEl.disabled = true;
+                 document.getElementById('category-filter').innerHTML = ''; // Очистка
+            }
         };
 
         reader.onerror = function() {
             uploadMessage.textContent = 'Ошибка чтения файла.';
-            uploadMessage.classList.remove('success-message');
             uploadMessage.classList.add('error-message');
             document.getElementById('channel-list').innerHTML = '';
-            document.getElementById('category-filter').innerHTML = '';
+            document.getElementById('category-filter').innerHTML = ''; // Очистка
             searchInputEl.disabled = true;
         };
 
         reader.readAsText(file);
-    }
-    
-    // НОВАЯ ФУНКЦИЯ: Загрузка плейлиста по URL
-    async function loadPlaylistFromUrl(url) {
-        if (!url) {
-            uploadMessage.textContent = 'Ошибка: Введите корректный URL.';
-            uploadMessage.classList.remove('success-message');
-            uploadMessage.classList.add('error-message');
-            return;
-        }
-        
-        uploadMessage.textContent = 'Загрузка по URL...';
-        uploadMessage.classList.remove('error-message', 'success-message');
-        uploadMessage.classList.add('message');
-        searchInputEl.value = ''; 
-        searchInputEl.disabled = true; 
-
-        try {
-            // Используем PROXY_BASE_URL для обхода CORS, как это предполагается в исходном коде
-            const proxyUrl = PROXY_BASE_URL + encodeURIComponent(url);
-            
-            const response = await fetch(proxyUrl);
-
-            if (!response.ok) {
-                 throw new Error(`Ошибка HTTP: ${response.status}`);
-            }
-
-            const content = await response.text();
-            processPlaylistContent(content);
-
-        } catch (error) {
-            console.error('Ошибка загрузки плейлиста по URL:', error);
-            uploadMessage.textContent = `Ошибка: Не удалось загрузить плейлист по ссылке: ${error.message}`;
-            uploadMessage.classList.remove('success-message');
-            uploadMessage.classList.add('error-message');
-            document.getElementById('channel-list').innerHTML = '';
-            document.getElementById('category-filter').innerHTML = '';
-        }
-    }
-    
-    // Обработчик кнопки "Загрузить URL"
-    function handleUrlLoad() {
-        const url = urlInput.value.trim();
-        loadPlaylistFromUrl(url);
     }
 
     // Обработка через кнопку/выбор файла
@@ -736,10 +603,7 @@
     // Визуальный эффект при перетаскивании
     ['dragenter', 'dragover'].forEach(eventName => {
         uploadSection.addEventListener(eventName, () => {
-             // Только если курсор над секцией "перетаскивания файла", а не над полем URL
-             if (event.target === uploadSection || event.target.id === 'file-input' || event.target.classList.contains('upload-button') || event.target.tagName === 'P') {
-                uploadSection.classList.add('dragover');
-             }
+            uploadSection.classList.add('dragover');
         }, false);
     });
 
