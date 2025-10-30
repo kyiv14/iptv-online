@@ -7,13 +7,27 @@
     <link rel="icon" href="https://raw.githubusercontent.com/kyiv14/iptv-online/refs/heads/main/icon.ico">
     
     <style>
-        /* Общие стили для "Apple-стиля" */
+        /* VARIABLES - Соответствуют index.html */
+        :root {
+            --primary-color: #dc2625; /* Red-700 */
+            --secondary-color: #ffffff;
+            --background-color: #f5f5f7; 
+            --text-color: #1d1d1f;
+            --border-color: #e3e3e3; 
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --transition-duration: 0.2s;
+            --success-color: #34c759; /* Зеленый */
+            --error-color: var(--primary-color); /* Красный */
+        }
+        
+        /* BASE STYLES */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            background-color: #f2f2f7;
-            padding: 20px;
+            font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            background-color: var(--background-color);
+            padding: 30px 20px;
             margin: 0;
-            color: #1c1c1e;
+            color: var(--text-color);
+            line-height: 1.5;
         }
 
         .container {
@@ -23,10 +37,10 @@
 
         /* Стиль заголовка */
         h1 {
-            font-size: 2.5rem;
+            font-size: 28px;
             font-weight: 700;
-            color: #007aff;
-            margin-bottom: 20px;
+            color: var(--primary-color);
+            margin-bottom: 30px;
             text-align: center;
         }
 
@@ -34,42 +48,50 @@
         .upload-section {
             padding: 30px;
             margin-bottom: 30px;
-            border: 2px dashed #007aff;
-            background-color: #ffffff;
-            border-radius: 12px;
+            border: 2px dashed var(--primary-color);
+            background-color: var(--secondary-color);
+            border-radius: 18px;
             text-align: center;
-            transition: background-color 0.3s, border-color 0.3s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: background-color var(--transition-duration), border-color var(--transition-duration);
+            box-shadow: 0 4px 12px var(--shadow-color);
             cursor: pointer;
         }
 
         .upload-section:hover, .upload-section.dragover {
-            border-color: #34c759;
-            background-color: #e5e5ea;
+            border-color: var(--success-color);
+            background-color: #fafafa;
         }
 
         .upload-section p {
             margin: 5px 0;
-            font-size: 1.1rem;
-            color: #3a3a3c;
+            font-size: 16px;
+            color: var(--text-color);
         }
 
         .upload-button {
-            background-color: #007aff;
-            color: white;
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all var(--transition-duration) ease;
             margin-top: 15px;
+            box-shadow: 0 2px 4px rgba(220, 38, 37, 0.2);
         }
 
         .upload-button:hover {
-            background-color: #005bb5;
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
+        
+        .upload-button:active {
+            transform: translateY(1px) scale(0.99); 
+            box-shadow: 0 1px 2px rgba(220, 38, 37, 0.2);
+        }
+
 
         #file-input {
             display: none;
@@ -82,22 +104,21 @@
 
         #search-input {
             width: 100%;
-            padding: 12px 20px;
-            font-size: 1rem;
-            border: 1px solid #d1d1d6;
+            padding: 12px 15px;
+            font-size: 15px;
+            border: 1px solid var(--border-color);
             border-radius: 10px;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 1px 3px var(--shadow-color);
             box-sizing: border-box;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            color: var(--text-color);
+            background: var(--secondary-color);
+            transition: border-color var(--transition-duration) ease, box-shadow var(--transition-duration) ease;
         }
 
         #search-input:focus {
-            border-color: #007aff;
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(220, 38, 37, 0.15);
         }
 
         /* Стиль кнопок категорий (ПЛАШКИ) */
@@ -107,72 +128,69 @@
             gap: 10px;
             padding: 15px 0;
             margin-bottom: 20px;
-            border-top: 1px solid #d1d1d6;
-            border-bottom: 1px solid #d1d1d6;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
             overflow-x: auto;
             white-space: nowrap;
         }
         
         .category-button {
             display: inline-block;
-            background-color: #ff3b30; /* Красный цвет */
-            color: white;
+            background-color: #e9e9e9; 
+            color: var(--text-color);
             border: none;
             padding: 8px 15px;
-            border-radius: 20px; /* Округлые плашки */
-            font-size: 0.9rem;
-            font-weight: 600;
+            border-radius: 20px; 
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.2s, opacity 0.2s;
+            transition: background-color var(--transition-duration), box-shadow var(--transition-duration);
             flex-shrink: 0;
             user-select: none;
         }
         
         .category-button:hover {
-            background-color: #c03126; /* Темнее при наведении */
+            background-color: #d8d8d8; 
         }
 
         .category-button.active {
-            background-color: #007aff; /* Синий акцент для активной категории */
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            font-weight: 600;
         }
         
         /* Стиль группы каналов */
         h2 {
-            font-size: 1.8rem;
+            font-size: 20px; 
             font-weight: 600;
-            color: #1c1c1e;
+            color: var(--text-color);
             margin-top: 40px;
             margin-bottom: 20px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #d1d1d6;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
             text-align: center; 
         }
         
         /* Сетка для плиток */
         .channel-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 20px; 
             list-style: none;
             padding: 0;
             margin: 0;
         }
 
-        /* Скрытие пустых групп при поиске */
-        .channel-group-container:empty {
-            display: none;
-        }
-
         /* Стиль квадратной плитки канала */
         .channel-tile {
-            background-color: #ffffff;
-            border-radius: 12px;
+            background-color: var(--secondary-color);
+            border-radius: 18px; 
             overflow: hidden;
             text-align: center;
             padding: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: default;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            transition: transform var(--transition-duration) ease, box-shadow var(--transition-duration) ease;
+            cursor: pointer;
             text-decoration: none;
             color: inherit;
             display: flex;
@@ -185,10 +203,13 @@
         }
         
         .channel-tile:hover {
-            transform: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
+        .channel-tile:active {
+            transform: translateY(1px) scale(0.99); 
+        }
 
         .channel-logo {
             width: 80%;
@@ -197,6 +218,7 @@
             object-fit: contain;
             border-radius: 8px;
             margin-bottom: 10px;
+            flex-grow: 1; 
         }
         
         /* Заглушка, если нет логотипа */
@@ -206,35 +228,142 @@
             justify-content: center;
             width: 80%;
             height: 80%;
-            background-color: #f0f0f0;
+            background-color: #f7f7f9;
             border-radius: 8px;
             color: #888;
             font-size: 1.5rem;
             margin-bottom: 10px;
+            flex-grow: 1;
         }
 
         .channel-name {
-            font-size: 0.9rem;
+            font-size: 14px;
             font-weight: 500;
             line-height: 1.2;
             word-break: break-word;
-            flex-grow: 0;
+            flex-shrink: 0;
             overflow: hidden;
+            max-height: 2.4em; 
         }
         
         .message {
-            color: #3a3a3c;
+            color: var(--text-color);
             font-weight: 500;
             margin-top: 15px;
             text-align: center;
+            font-size: 16px;
         }
         
         .error-message {
-            color: #ff3b30;
+            color: var(--error-color);
+            font-weight: 600;
         }
         
         .success-message {
-            color: #34c759;
+            color: var(--success-color);
+            font-weight: 600;
+        }
+        
+        /* --- Стили для Модального окна Плеера (Новый блок) --- */
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; 
+        }
+
+        .modal-content {
+            background-color: var(--text-color); /* Темный фон для плеера */
+            margin: auto;
+            border-radius: 18px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            max-width: 95%;
+            width: 90%; 
+            max-height: 95%;
+            height: 90%;
+            position: relative;
+            animation: animatetop 0.4s;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 15px;
+            color: var(--secondary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(28, 28, 30, 0.9); /* Почти черный */
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 20px;
+        }
+
+        .modal-close {
+            color: #ccc;
+            font-size: 32px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        #player-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            background-color: #000;
+            flex-grow: 1;
+        }
+
+        @keyframes animatetop {
+            from {opacity: 0}
+            to {opacity: 1}
+        }
+
+        /* Адаптивность */
+        @media (max-width: 740px) {
+            .channel-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 15px;
+            }
+            .modal-content {
+                width: 100%;
+                height: 100%;
+                max-width: 100%;
+                max-height: 100%;
+                border-radius: 0;
+            }
+            .modal-header {
+                border-radius: 0;
+            }
         }
     </style>
 </head>
@@ -258,12 +387,25 @@
         </div>
 
     <div id="channel-list">
-        <p class="message" style="text-align: center; color: #6c757d;">Загрузите плейлист, чтобы увидеть список каналов.</p>
+        <p class="message" style="color: #6c757d;">Загрузите плейлист, чтобы увидеть список каналов.</p>
+    </div>
+</div>
+
+<div id="playerModal" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="modalTitle">Загрузка канала...</h3>
+            <span class="modal-close" onclick="closeModal(event)">&times;</span>
+        </div>
+        <iframe id="player-iframe" src="" allowfullscreen frameborder="0" allow="autoplay"></iframe>
     </div>
 </div>
 
 <script>
-    const PROXY_BASE_URL = window.location.origin + '/api/proxy?url=';
+    // --- Глобальные переменные для работы с модальным окном ---
+    const playerModal = document.getElementById('playerModal');
+    const playerIframe = document.getElementById('player-iframe');
+    const modalTitle = document.getElementById('modalTitle');
     
     // --- Утилитарные функции для парсинга и рендеринга ---
 
@@ -274,8 +416,8 @@
         let isInChannelBlock = false;
 
         const extinfRegex = /#EXTINF:.*?,(.+)/; 
-        const logoRegex = /tvg-logo="([^"]*)"/;
-        const groupTitleRegex = /group-title="([^"]*)"/;
+        const logoRegex = /tvg-logo="([^"]*)"/i; 
+        const groupTitleRegex = /group-title="([^"]*)"/i;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
@@ -301,17 +443,18 @@
                     currentChannel.group = line.substring(8).trim();
                 }
             }
-            else if ((line.startsWith('http') || line.startsWith('https')) && line.includes('.m3u')) {
+            // Проверка на URL потока
+            else if ((line.startsWith('http') || line.startsWith('https')) && line.length > 10) {
                 if (isInChannelBlock && currentChannel.name) { 
                     const originalUrl = line.trim();
-                    currentChannel.url = originalUrl; // URL потока не нужен, но оставляем для структуры
+                    currentChannel.url = originalUrl;
                     channels.push({ ...currentChannel }); 
                     currentChannel = { name: '', logo: '', group: 'Без категории', url: '' };
                     isInChannelBlock = false;
                 }
             }
         }
-        return channels.filter(c => c.name);
+        return channels.filter(c => c.name && c.url); // Фильтруем каналы без URL
     }
 
     function groupChannels(channels) {
@@ -320,7 +463,7 @@
             normalizedName: c.name.toLowerCase(),
             normalizedGroup: c.group.toLowerCase()
         })).reduce((acc, channel) => {
-            const group = channel.group || 'Без категории';
+            const group = channel.group || 'Без категории'; 
             if (!acc[group]) {
                 acc[group] = [];
             }
@@ -335,21 +478,21 @@
         
         window.allChannelsData = groupedChannels;
 
-        if (Object.keys(groupedChannels).length === 0 || Object.values(groupedChannels).every(arr => arr.length === 0)) {
+        const allGroups = Object.keys(groupedChannels);
+        if (allGroups.length === 0 || allGroups.every(group => groupedChannels[group].length === 0)) {
              listContainer.innerHTML = '<p class="message error-message">Плейлист пуст или не содержит корректных каналов.</p>';
+             document.getElementById('category-filter').innerHTML = '';
              return;
         }
         
-        // 1. Создание кнопок категорий
-        createCategoryButtons(Object.keys(groupedChannels));
+        createCategoryButtons(allGroups);
 
-        // 2. Рендеринг плиток
-        for (const group in groupedChannels) {
-            if (groupedChannels[group].length === 0) continue;
+        allGroups.forEach(group => {
+            if (groupedChannels[group].length === 0) return;
             
             const groupContainer = document.createElement('div');
             groupContainer.classList.add('channel-group-container');
-            groupContainer.setAttribute('data-category', group); // Идентификатор для фильтрации
+            groupContainer.setAttribute('data-category', group); 
 
             const groupTitle = document.createElement('h2');
             groupTitle.textContent = group;
@@ -359,7 +502,19 @@
             grid.classList.add('channel-grid');
 
             groupedChannels[group].forEach(channel => {
-                const tile = document.createElement('div'); // Используем div
+                const tile = document.createElement('a'); 
+                // Вместо прямого href, мы будем использовать атрибуты для JS
+                tile.href = "#"; // Используем заглушку
+                tile.setAttribute('data-url', channel.url); // Сохраняем URL
+                tile.setAttribute('data-name', channel.name); // Сохраняем имя
+                
+                // --- ДОБАВЛЕНИЕ ОБРАБОТЧИКА КЛИКА ---
+                tile.addEventListener('click', (e) => {
+                    e.preventDefault(); // Запрещаем переход по ссылке
+                    openPlayerModal(channel.url, channel.name);
+                });
+                // ------------------------------------
+
                 tile.classList.add('channel-tile');
                 tile.setAttribute('data-name', channel.name); 
                 tile.setAttribute('data-group', channel.group); 
@@ -369,18 +524,19 @@
                     logo.classList.add('channel-logo');
                     logo.src = channel.logo;
                     logo.alt = channel.name;
+                    logo.loading = 'lazy'; 
                     logo.onerror = function() {
                          this.style.display='none';
                          const placeholder = document.createElement('div');
                          placeholder.classList.add('logo-placeholder');
-                         placeholder.textContent = channel.name.substring(0, 2).toUpperCase();
+                         placeholder.textContent = channel.name ? channel.name.substring(0, 2).toUpperCase() : 'P';
                          this.parentNode.insertBefore(placeholder, this.nextSibling);
                     }; 
                     tile.appendChild(logo);
                 } else {
                     const placeholder = document.createElement('div');
                     placeholder.classList.add('logo-placeholder');
-                    placeholder.textContent = channel.name.substring(0, 2).toUpperCase(); 
+                    placeholder.textContent = channel.name ? channel.name.substring(0, 2).toUpperCase() : 'P';
                     tile.appendChild(placeholder);
                 }
 
@@ -394,25 +550,44 @@
 
             groupContainer.appendChild(grid);
             listContainer.appendChild(groupContainer);
-        }
+        });
         
-        // Сброс фильтра поиска после рендеринга
+        const allButton = document.querySelector('#category-filter button[data-filter="all"]');
+        if(allButton) allButton.classList.add('active');
         filterChannels(searchInput.value);
     }
     
-    // --- НОВАЯ ФУНКЦИЯ: Создание кнопок категорий ---
+    // --- Функции для Модального окна ---
+    
+    function openPlayerModal(url, name) {
+        modalTitle.textContent = name;
+        playerIframe.src = url; // Устанавливаем URL потока
+        playerModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Запрещаем прокрутку фона
+    }
+
+    function closeModal(event) {
+        // Закрываем, только если клик был по крестику, по фону или по span.modal-close
+        if (event.target === playerModal || event.target.className === "modal-close") {
+            playerModal.style.display = 'none';
+            playerIframe.src = ''; // Останавливаем воспроизведение, очищая src
+            modalTitle.textContent = 'Загрузка канала...'; // Сброс
+            document.body.style.overflow = ''; // Разрешаем прокрутку фона
+        }
+    }
+    
+    // --- Остальные функции (без изменений, но включены для полноты) ---
+
     function createCategoryButtons(categories) {
         const filterContainer = document.getElementById('category-filter');
-        filterContainer.innerHTML = ''; // Очищаем контейнер
+        filterContainer.innerHTML = ''; 
 
-        // Кнопка "Все" (All)
         const allButton = document.createElement('button');
-        allButton.textContent = 'Все (All)';
-        allButton.classList.add('category-button', 'active');
+        allButton.textContent = 'Все';
+        allButton.classList.add('category-button');
         allButton.setAttribute('data-filter', 'all');
         filterContainer.appendChild(allButton);
         
-        // Кнопки для каждой категории
         categories.forEach(category => {
             const button = document.createElement('button');
             button.textContent = category;
@@ -421,11 +596,10 @@
             filterContainer.appendChild(button);
         });
 
-        // Добавляем обработчик кликов для контейнера
+        filterContainer.removeEventListener('click', handleCategoryFilterClick); 
         filterContainer.addEventListener('click', handleCategoryFilterClick);
     }
     
-    // --- НОВАЯ ФУНКЦИЯ: Обработка клика по кнопке категории ---
     function handleCategoryFilterClick(event) {
         const target = event.target;
         if (!target.classList.contains('category-button')) return;
@@ -434,47 +608,48 @@
         const containers = document.querySelectorAll('.channel-group-container');
         const buttons = document.querySelectorAll('.category-button');
 
-        // Сброс активного состояния кнопок
         buttons.forEach(btn => btn.classList.remove('active'));
         target.classList.add('active');
         
-        searchInput.value = ''; // Очищаем поле поиска при активации категории
+        searchInput.value = ''; 
+
+        let visibleGroupsCount = 0;
 
         containers.forEach(container => {
             const category = container.getAttribute('data-category');
             
             if (selectedCategory === 'all' || category === selectedCategory) {
-                // Показываем контейнер категории
                 container.style.display = '';
-                // Показываем все плитки внутри (т.к. поиск сброшен)
                 container.querySelectorAll('.channel-tile').forEach(tile => {
                      tile.style.display = '';
                 });
+                visibleGroupsCount++;
             } else {
-                // Скрываем контейнер
                 container.style.display = 'none';
             }
         });
         
-        // Убираем сообщение "Каналы не найдены", если оно было
         const noResultsMessage = document.querySelector('#channel-list > .message');
         if (noResultsMessage) noResultsMessage.remove();
+        
+        if (visibleGroupsCount === 0) {
+            document.getElementById('channel-list').insertAdjacentHTML('beforeend', '<p class="message error-message">Каналы в этой категории не найдены.</p>');
+        }
     }
 
-
-    // --- Логика поиска ---
 
     const searchInput = document.getElementById('search-input');
 
     function filterChannels(searchTerm) {
-        const term = searchTerm.toLowerCase();
+        const term = searchTerm.toLowerCase().trim();
         const allGroupContainers = document.querySelectorAll('.channel-group-container');
-        const filterContainer = document.getElementById('category-filter');
         let visibleChannelsCount = 0;
         
-        // Сброс активной кнопки фильтрации при начале ввода
         if (term.length > 0) {
-            filterContainer.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
+        } else {
+            const allButton = document.querySelector('#category-filter button[data-filter="all"]');
+            if(allButton) allButton.classList.add('active');
         }
 
         allGroupContainers.forEach(groupContainer => {
@@ -499,7 +674,6 @@
 
             if (hasVisibleTiles) {
                 groupContainer.style.display = '';
-                groupTitleEl.style.display = '';
             } else {
                 groupContainer.style.display = 'none';
             }
@@ -513,26 +687,19 @@
         if (visibleChannelsCount === 0 && term.length > 0) {
              const messageHTML = `<p class="message error-message">По запросу "${searchTerm}" каналы не найдены.</p>`;
              document.getElementById('channel-list').insertAdjacentHTML('beforeend', messageHTML);
-        } else if (visibleChannelsCount === 0 && document.querySelectorAll('.channel-group-container').length === 0) {
-             const messageHTML = '<p class="message" style="text-align: center; color: #6c757d;">Загрузите плейлист, чтобы увидеть список каналов.</p>';
-             document.getElementById('channel-list').insertAdjacentHTML('beforeend', messageHTML);
         }
     }
 
-    // Привязываем функцию поиска к полю ввода
     searchInput.addEventListener('input', (event) => {
         filterChannels(event.target.value);
     });
 
-    // --- Логика загрузки и перетаскивания файла ---
-    
     const fileInput = document.getElementById('file-input');
     const uploadSection = document.getElementById('uploadSection');
     const uploadMessage = document.getElementById('uploadMessage');
     const searchInputEl = document.getElementById('search-input');
 
 
-    // Главный обработчик файла
     function handleFile(file) {
         if (!file) return;
 
@@ -541,6 +708,8 @@
         uploadMessage.classList.add('message');
         searchInputEl.value = ''; 
         searchInputEl.disabled = true; 
+        document.getElementById('channel-list').innerHTML = ''; 
+        document.getElementById('category-filter').innerHTML = ''; 
 
         const reader = new FileReader();
         
@@ -550,8 +719,6 @@
             if (!content.trim().startsWith('#EXTM3U')) {
                 uploadMessage.textContent = 'Ошибка: Файл не является корректным M3U плейлистом (отсутствует #EXTM3U).';
                 uploadMessage.classList.add('error-message');
-                document.getElementById('channel-list').innerHTML = '';
-                document.getElementById('category-filter').innerHTML = ''; // Очистка
                 return;
             }
 
@@ -564,27 +731,20 @@
                  uploadMessage.textContent = `Успешно загружено ${allChannels.length} каналов.`;
                  uploadMessage.classList.add('success-message');
                  searchInputEl.disabled = false; 
-                 filterChannels(searchInputEl.value); 
             } else {
-                 uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов с именами.';
+                 uploadMessage.textContent = 'Плейлист загружен, но не содержит корректных каналов.';
                  uploadMessage.classList.add('error-message');
-                 searchInputEl.disabled = true;
-                 document.getElementById('category-filter').innerHTML = ''; // Очистка
             }
         };
 
         reader.onerror = function() {
             uploadMessage.textContent = 'Ошибка чтения файла.';
             uploadMessage.classList.add('error-message');
-            document.getElementById('channel-list').innerHTML = '';
-            document.getElementById('category-filter').innerHTML = ''; // Очистка
-            searchInputEl.disabled = true;
         };
 
         reader.readAsText(file);
     }
 
-    // Обработка через кнопку/выбор файла
     fileInput.addEventListener('change', function(event) {
         if (event.target.files.length > 0) {
             handleFile(event.target.files[0]);
@@ -592,7 +752,6 @@
         }
     });
 
-    // Обработка Drag and Drop: Предотвращение стандартного поведения браузера
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         uploadSection.addEventListener(eventName, (e) => {
             e.preventDefault();
@@ -600,7 +759,6 @@
         }, false);
     });
 
-    // Визуальный эффект при перетаскивании
     ['dragenter', 'dragover'].forEach(eventName => {
         uploadSection.addEventListener(eventName, () => {
             uploadSection.classList.add('dragover');
@@ -613,7 +771,6 @@
         }, false);
     });
 
-    // Обработка сброса файла
     uploadSection.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
         const files = dt.files;
